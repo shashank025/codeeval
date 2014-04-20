@@ -8,55 +8,6 @@ def debug_print(msg):
     if 'DEBUG' in environ and environ['DEBUG']:
         print msg
 
-def intersect1d((start1, end1), (start2, end2)):
-    """Do these 1-D line segments intersect?
-
-    Assumptions: start1 <= end1 and start2 <= end2.
-
-    1-d line segments are line segments that lie
-    on the same straight line, e.g., the x-axis.
-
-    >>> intersect1d((2, 4), (5, 7))  # disjoint
-    False
-    >>> intersect1d((2, 7), (5, 6))  # contained
-    True
-    >>> intersect1d((2, 7), (5, 9))  # proper int
-    True
-    >>> intersect1d((5, 7), (2, 4))  # disjoint
-    False
-    >>> intersect1d((5, 6), (2, 7))  # contained
-    True
-    >>> intersect1d((5, 9), (2, 7))  # proper int
-    True
-    """
-
-    assert start1 <= end1, "first arg for intersect1d invalid: start > end"
-    assert start2 <= end2, "second arg for intersect1d invalid: start > end"
-    return start2 <= end1 <= end2 or start1 <= end2 <= end1
-
-def box((p1, p2)):
-    """Returns the bounding box corresponding to the segment (p1, p2).
-
-    >>> box((Point(24, -35), Point(21, 46)))
-    (Point(lat=21, lon=-35), Point(lat=24, lon=46))
-    """
-    return Point(min(p1.lat, p2.lat), min(p1.lon, p2.lon)), Point(max(p1.lat, p2.lat), max(p1.lon, p2.lon))
-
-def box_overlap(segment1, segment2):
-    """Do the bounding boxes formed by these two segments overlap?
-
-    Note that this is a prerequisite for the segments intersecting.
-    """
-
-    pstart1, pend1 = box(segment1)
-    pstart1, pend2 = box(segment2)
-
-    xint = intersect1d((pstart1.lat, pend1.lat), (pstart2.lat, pend2.lat))
-    if not xint:
-        return False
-    yint = intersect1d((pstart1.lon, pend1.lon), (pstart2.lon, pend2.lon))
-    return yint
-
 def ccw(a, b, c):
     """Points a, b, c are counterclockwise iff slope of ab is less than slope of ac"""
     return (a.lat - c.lat)*(a.lon - b.lon) > (a.lat - b.lat)*(a.lon - c.lon)

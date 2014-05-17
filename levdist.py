@@ -9,26 +9,47 @@ def debug(msg):
     if 'DEBUG' in environ and environ['DEBUG']:
         print msg
 
+def friends(word, member):
+    """
+    >>> dictionary = frozenset(['the', 'cat', 'hat', 'then', 'them', 'kilted', 'gilted', 'gifted', 'they', 'their'])
+    >>> member = lambda w: w in dictionary
+    >>> sorted(friends('foo', member))
+    []
+    >>> sorted(friends('the', member))
+    ['them', 'then', 'they']
+    >>> sorted(friends('hat', member))
+    ['cat']
+    >>> sorted(friends('kilted', member))
+    ['gilted']
+    >>> sorted(friends('gilted', member))
+    ['gifted', 'kilted']
+    >>> sorted(friends('gifted', member))
+    ['gilted']
+    """
+    splits   = [(word[:i], word[i:]) for i in range(len(word) + 1)]
+    deletes  = filter(member, (a + b[1:]     for a, b in splits if b))
+    replaces = filter(member, (a + c + b[1:] for a, b in splits for c in ALPHABET if b))
+    inserts  = filter(member, (a + c + b     for a, b in splits for c in ALPHABET))
+    output   = set(deletes + inserts + replaces)
+    output.discard(word)
+    return output
+
 class network(object):
+    """on-demand (lazy) evaluation of closure of each word in specified dictionary"""
+
     def __init__(self, words):
-        self.wordpos      = dict((word, i) for i, word in enumerate(words))
-        self.wordstr      = dict((i, word) for i, word in enumerate(words))
+        self.pos_of_word  = dict((word, i) for i, word in enumerate(words))
+        self.word_at_pos  = dict((i, word) for i, word in enumerate(words))
         self.friendcache  = {}    # position -> [set of positions]
         self.closurecache = {}    # position -> [set of positions]
-
-    def friends(self, word):
-        member   = lambda w: w in self.wordpos
-        splits   = [(word[:i], word[i:]) for i in range(len(word) + 1)]
-        deletes  = filter(member, (a + b[1:] for a, b in splits if b))
-        replaces = filter(member, (a + c + b[1:] for a, b in splits for c in ALPHABET if b))
-        inserts  = filter(member, (a + c + b     for a, b in splits for c in ALPHABET))
-        return set(deletes + inserts + replaces)
+        self.member       = lambda w: w in self.pos_of_word
 
     def pfriends(self, pos):
         """wrapper around friends that deals with positions instead"""
 
         if pos not in self.friendcache:
-            self.friendcache[pos] = set(self.wordpos[w] for w in self.friends(self.wordstr[pos]))
+            self.friendcache[pos] = set(self.pos_of_word[w] for w in friends(self.word_at_pos[pos],
+                                                                             self.member))
         return self.friendcache[pos]
 
     def _closure(self, pos):
@@ -39,7 +60,6 @@ class network(object):
                 if fpos not in output:
                     output.add(fpos)
                     q.put(fpos)
-        output.discard(pos)
         return output
 
     def closure(self, word):
@@ -47,17 +67,23 @@ class network(object):
 
         >>> input = ['the', 'cat', 'hat', 'then', 'them', 'kilted', 'gilted', 'gifted', 'they', 'their']
         >>> n = network(input)
-        >>> sorted(n.wordstr[p] for p in n.closure('the'))
-        ['them', 'then', 'they']
-        >>> sorted(n.wordstr[p] for p in n.closure('they'))
-        ['the', 'them', 'then']
-        >>> sorted(n.wordstr[p] for p in n.closure('kilted'))
-        ['gifted', 'gilted']
-        >>> sorted(n.wordstr[p] for p in n.closure('their'))
-        []
+        >>> sorted(n.word_at_pos[p] for p in n.closure('the'))
+        ['the', 'them', 'then', 'they']
+        >>> sorted(n.word_at_pos[p] for p in n.closure('they'))
+        ['the', 'them', 'then', 'they']
+        >>> sorted(n.word_at_pos[p] for p in n.closure('kilted'))
+        ['gifted', 'gilted', 'kilted']
+        >>> sorted(n.word_at_pos[p] for p in n.closure('their'))
+        ['their']
         """
-        pos = self.wordpos[word]
-        return self._closure(pos)
+        pos = self.pos_of_word[word]
+        if pos not in self.closurecache:
+            computed_closure = self._closure(pos)
+            # given a closure c, the closure for every member in c is again c.
+            self.closurecache[pos] = computed_closure
+            for member in computed_closure:
+                self.closurecache[member] = computed_closure
+        return self.closurecache[pos]
 
 def main():
     testcases = []
@@ -72,4 +98,8 @@ def main():
         print len(n.closure(t))
 
 if __name__ == '__main__':
-    main()
+    if 'TEST' in environ and environ['TEST']:
+        import doctest
+        doctest.testmod()
+    else:
+        main()

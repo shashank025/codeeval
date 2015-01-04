@@ -6,9 +6,8 @@ def doit(l):
     return foo if len(foo) < k else reversed(foo)
 
 for line in fileinput.input():
-    line = line.strip()
     contents, k = line.split(';')
-    contents = [int(c) for c in contents.split(',')]
+    contents = contents.split(',')
     k = int(k)
     print ','.join([str(e)
                     for e in chain.from_iterable([doit(e)

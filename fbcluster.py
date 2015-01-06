@@ -1,41 +1,44 @@
+from collections import defaultdict
 import re
 import fileinput
 
 pattern = re.compile('\s+')
 
-edges = set()
-def is_tight_with(cluster, node):
-    return all((v, node) in edges and (node, v) in edges for v in cluster)
+def find_cliques(g):
+    cliques = []
+    def bron_kerbosch1(r, p, x):
+        """return all maximal cliques in graph g, such that each clique includes:
 
+        all vertices in r,
+        some of the vertices in p, and
+        and none of the vertices in x.
+        """
+        if not p and not x and r:
+            cliques.append(r)
+        for v in p[:]:            # trick: making a copy here
+            neighs = g[v]
+            bron_kerbosch1(r.union([v]), list(set(p).intersection(neighs)), x.intersection(neighs))
+            p.remove(v)
+            x = x.union([v])
+    bron_kerbosch1(set(), g.keys(), set())
+    return cliques
+
+# each edge is of the form (node1, node2)
+edges = set()
 for line in fileinput.input():
     from_u, to_u = pattern.split(line.strip())[-2:]
     edges.add((from_u, to_u))
 
-clusters = []
-for i, (a, b) in enumerate(edges):
-    rev_edge = (b, a)
-    if not rev_edge in edges:
-        continue
-    # a<->b is a strong edge: a and b are eligible to be clustered.
-    # initialize clusters when you see the first edge
-    new_cluster = False
-    if not clusters:
-        new_cluster = True
-    for cluster in clusters:
-        if a in cluster and b in cluster:
-            continue
-        if a in cluster and is_tight_with(cluster, b):
-            cluster.add(b)
-        elif b in cluster and is_tight_with(cluster, a):
-            cluster.add(a)
-        else:
-            new_cluster = True
-    if new_cluster:
-        cluster = set([a, b])
-        if not any(cluster.issubset(existing_cluster) for existing_cluster in clusters):
-            clusters.append(cluster)
-    # print "%(i)s [%(a)s -> %(b)s] %(clusters)s" % locals()
+# node -> set([neighbor1, neighbor2, ...])
+graph = defaultdict(set)
+# only strong edges
+for a, b in edges:
+    if (b, a) in edges:
+        graph[a].add(b)
+        graph[b].add(a)
 
-clusters = sorted(', '.join(sorted(cluster)) for cluster in clusters if len(cluster) > 2)
-for cluster in clusters:
-    print cluster
+scliques = sorted(', '.join(sorted(clique))
+                  for clique in find_cliques(graph)
+                  if len(clique) > 2)
+for clique in scliques:
+    print clique

@@ -28,7 +28,6 @@ then, the output will be:
 
 import argparse
 import doctest
-import sys
 
 from itertools import chain
 
@@ -58,8 +57,8 @@ def diff(stream_a, stream_b):
     '-a-b-c'
     >>> ''.join(list(diff(iter(''), iter('abc'))))
     '+a+b+c'
-    >>> ''.join(list(diff(iter('abc'), iter('xyzabcuvw'))))
-    '+x+y+z a b c+u+v+w'
+    >>> ''.join(list(diff(iter('abc'), iter('xyzacbuvw'))))
+    '+x+y+z a+c b-c+u+v+w'
     >>> ''.join(list(diff(iter('abcd'), iter('aace'))))
     ' a-b+a c-d+e'
     >>> ''.join(list(diff(iter('abcdef'), iter('fghxbyzd'))))
@@ -90,18 +89,22 @@ def diff(stream_a, stream_b):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Print a Unix style diff")
     parser.add_argument('-t', '--tests',
                         help="Run doc tests",
                         action="store_true")
     parser.add_argument('file_a',
+                        nargs='?',
                         help="Old file")
     parser.add_argument('file_b',
+                        nargs='?',
                         help="New file")
     args = parser.parse_args()
     if args.tests:
-        doctest.testmod()
+        doctest.testmod(verbose=True)
         return
+    if not (args.file_a and args.file_b):
+        parser.error("Either specify the --tests flag, or specify both positional args")
     for line in diff(fstream(args.file_a), fstream(args.file_b)):
         print(line)
 

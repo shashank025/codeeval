@@ -1,0 +1,65 @@
+[MESSAGES CONTROL]
+
+disable=all
+
+# please keep these in sorted order
+enable=access-member-before-definition,
+  arguments-differ,
+  assigning-non-slot,
+  assignment-from-no-return,
+  assignment-from-none,
+  continue-in-finally,
+  import-error,
+  inherit-non-class,
+  invalid-sequence-index,
+  invalid-slice-index,
+  method-hidden,
+  no-value-for-parameter,
+  not-callable,
+  pointless-statement,
+  reimported,
+  signature-differs,
+  unexpected-keyword-arg,
+  unreachable,
+  unsupported-membership-test,
+  unused-import,
+  unused-variable,
+  unused-wildcard-import,
+  used-before-assignment,
+  wildcard-import
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=80
+
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+# Allow the body of an if to be on the same line as the test if there is no
+# else.
+single-line-if-stmt=no
+
+# List of optional constructs for which whitespace checking is disabled. `dict-
+# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
+# `trailing-comma` allows a space between comma and closing bracket: (a, ).
+# `empty-line` allows space-only lines.
+no-space-check=trailing-comma,dict-separator
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
+# tab).
+indent-string=' '
+
+# Number of spaces of indent required inside a hanging  or continued line.
+indent-after-paren=2
+
+# Expected format of line ending, e.g. empty (any line ending), LF or CRLF.
+expected-line-ending-format=
+
+[VARIABLES]
+
+# Tells whether we should check for unused import in __init__ files.
+init-import=yes
